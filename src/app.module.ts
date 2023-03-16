@@ -9,7 +9,7 @@ import * as redisStore from 'cache-manager-redis-store';
 @Module({
   imports: [
     CacheModule.register({ 
-      store: redisStore as unknown as CacheStore,
+      store: redisStore,
       host: 'localhost',
       port: 6379,
       isGlobal: true
@@ -18,7 +18,7 @@ import * as redisStore from 'cache-manager-redis-store';
       envFilePath: '.env',
       isGlobal: true,
     }),
-    //MongooseModule.forRoot(process.env.MONGO_URI)
+    MongooseModule.forRoot(process.env.MONGO_URI)
   ],
   controllers: [AppController],
   providers: [AppService],
