@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  CACHE_MANAGER,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -6,11 +11,13 @@ import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class UserService {
   // Inject the user model into the service
   constructor(
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
     @InjectModel(User.name) private userModel: Model<User>,
     private jwtService: JwtService,
   ) {}
@@ -42,7 +49,17 @@ export class UserService {
    * @returns {Promise<User[]>}
    */
   async findAll(): Promise<User[]> {
-    return this.userModel.find();
+    const cachedData = await this.cacheService.get<User[]>('users')
+    if (cachedData) {
+      return cachedData;
+    } else {
+      const users = this.userModel.find();
+      await this.cacheService.set('users', users);
+      if (!users) {
+        throw new NotFoundException('Users not found');
+      }
+      return users;
+    }
   }
 
   /**
@@ -51,11 +68,17 @@ export class UserService {
    * @returns {Promise<User>}
    */
   async findOne(id: string): Promise<User> {
-    const user = await this.userModel.findById(id);
-    if (!user) {
-      throw new NotFoundException('User not found');
+    const cachedData = await this.cacheService.get<User>('user');
+    if (cachedData) {
+      return cachedData;
+    } else {
+      const user = await this.userModel.findById(id);
+      await this.cacheService.set('user', user)
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      return user;
     }
-    return user;
   }
 
   /**

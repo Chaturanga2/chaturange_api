@@ -1,4 +1,5 @@
 import {
+  CacheInterceptor,
   Controller,
   Get,
   Post,
@@ -6,6 +7,9 @@ import {
   Param,
   Delete,
   Put,
+  UseInterceptors,
+  CacheTTL,
+  CacheKey,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -21,11 +25,17 @@ export class UserController {
     // return http status code 201
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey('find-all-user')
+  @CacheTTL(30)
   @Get()
   findAll() {
     return this.userService.findAll();
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey('find-one-user')
+  @CacheTTL(30)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.userService.findOne(id);
