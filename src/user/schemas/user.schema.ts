@@ -28,6 +28,9 @@ export class User {
 
   @Prop()
   level: Level;
+
+  @Prop()
+  refresh_token: string | null;
 }
 
 // export the schema

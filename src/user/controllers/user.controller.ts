@@ -11,9 +11,9 @@ import {
   CacheTTL,
   CacheKey,
 } from '@nestjs/common';
-import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UserService } from '../services/user.service';
+import { CreateUserDto } from '../dto/create-user.dto';
+import { UpdateUserDto } from '../dto/update-user.dto';
 
 @Controller('users')
 export class UserController {
@@ -23,6 +23,7 @@ export class UserController {
   create(@Body() createUserDto: CreateUserDto) {
     this.userService.create(createUserDto);
     // return http status code 201
+    return { message: 'User created successfully' };
   }
 
   @UseInterceptors(CacheInterceptor)

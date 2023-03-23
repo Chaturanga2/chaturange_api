@@ -4,10 +4,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto } from '../dto/create-user.dto';
+import { UpdateUserDto } from '../dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from './schemas/user.schema';
+import { Level, User } from '../schemas/user.schema';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
@@ -40,7 +40,7 @@ export class UserService {
       username,
       email,
       password: hashedPassword,
-      level,
+      level: Level.BEGINNER,
     });
   }
 
@@ -49,7 +49,7 @@ export class UserService {
    * @returns {Promise<User[]>}
    */
   async findAll(): Promise<User[]> {
-    const cachedData = await this.cacheService.get<User[]>('users')
+    const cachedData = await this.cacheService.get<User[]>('users');
     if (cachedData) {
       return cachedData;
     } else {
@@ -73,7 +73,7 @@ export class UserService {
       return cachedData;
     } else {
       const user = await this.userModel.findById(id);
-      await this.cacheService.set('user', user)
+      await this.cacheService.set('user', user);
       if (!user) {
         throw new NotFoundException('User not found');
       }
