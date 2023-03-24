@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
+import { SocketModule } from './socket/socket.module';
 import * as process from 'process';
 import * as redisStore from 'cache-manager-redis-store';
 
@@ -18,7 +19,8 @@ import * as redisStore from 'cache-manager-redis-store';
       port: process.env.REDIS_PORT,
       isGlobal: true
     }),
-    MongooseModule.forRoot(process.env.MONGO_URI)
+    MongooseModule.forRoot(process.env.MONGO_URI),
+    SocketModule
   ],
   controllers: [AppController],
   providers: [AppService],
