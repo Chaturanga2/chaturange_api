@@ -5,9 +5,6 @@ import { AppService } from './app.service';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  /**
-   * @Get() is a decorator that tells Nest that this method is a route handler
-   */
   @Get()
   getHello(): string {
     return this.appService.getHello();
