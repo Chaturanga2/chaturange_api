@@ -26,17 +26,11 @@ export class UserController {
     return { message: 'User created successfully' };
   }
 
-  @UseInterceptors(CacheInterceptor)
-  @CacheKey('find-all-user')
-  @CacheTTL(30)
   @Get()
   findAll() {
     return this.userService.findAll();
   }
 
-  @UseInterceptors(CacheInterceptor)
-  @CacheKey('find-one-user')
-  @CacheTTL(30)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.userService.findOne(id);

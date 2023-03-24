@@ -1,8 +1,12 @@
 import {
   CACHE_MANAGER,
+  CacheInterceptor,
+  CacheKey,
+  CacheTTL,
   Inject,
   Injectable,
   NotFoundException,
+  UseInterceptors,
 } from '@nestjs/common';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
@@ -17,8 +21,8 @@ import { Cache } from 'cache-manager';
 export class UserService {
   // Inject the user model into the service
   constructor(
-    @Inject(CACHE_MANAGER) private cacheService: Cache,
-    @InjectModel(User.name) private userModel: Model<User>,
+    @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
+    @InjectModel(User.name) private readonly userModel: Model<User>,
     private jwtService: JwtService,
   ) {}
 
@@ -48,18 +52,18 @@ export class UserService {
    * @description find all users in the database
    * @returns {Promise<User[]>}
    */
-  async findAll(): Promise<User[]> {
-    const cachedData = await this.cacheService.get<User[]>('users');
-    if (cachedData) {
-      return cachedData;
-    } else {
-      const users = this.userModel.find();
-      await this.cacheService.set('users', users);
-      if (!users) {
-        throw new NotFoundException('Users not found');
-      }
-      return users;
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey('users')
+  @CacheTTL(30)
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  async findAll(): Promise<User | {}> {
+    const cachedUsers = await this.cacheService.get('users');
+    if (cachedUsers) {
+      return cachedUsers;
     }
+    const users = await this.userModel.find().exec();
+    await this.cacheService.set('users', users);
+    return users;
   }
 
   /**
@@ -67,18 +71,21 @@ export class UserService {
    * @param id
    * @returns {Promise<User>}
    */
-  async findOne(id: string): Promise<User> {
-    const cachedData = await this.cacheService.get<User>('user');
-    if (cachedData) {
-      return cachedData;
-    } else {
-      const user = await this.userModel.findById(id);
-      await this.cacheService.set('user', user);
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-      return user;
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey('user')
+  @CacheTTL(30)
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  async findOne(id: string): Promise<User | {}> {
+    const cachedUsers = await this.cacheService.get('user');
+    if (cachedUsers) {
+      return cachedUsers;
     }
+    const user = await this.userModel.findById(id);
+    await this.cacheService.set('user', user);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 
   /**
