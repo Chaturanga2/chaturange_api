@@ -81,25 +81,20 @@ export class ChessGameEngine {
     col: number,
   ): number[][] {
     const possibleMoves: number[][] = [];
+    const player = gameState.currentPlayer;
 
     if (piece === 1) {
-      // Generate possible moves for pawn
-      // ...
+      // Possible moves for pawn
     } else if (piece === 2) {
-      // Generate possible moves for knight
-      // ...
+      // Possible moves for knight
     } else if (piece === 3) {
-      // Generate possible moves for bishop
-      // ...
+      // Possible moves for bishop
     } else if (piece === 4) {
-      // Generate possible moves for rook
-      // ...
+      // Possible moves for rook
     } else if (piece === 5) {
-      // Generate possible moves for queen
-      // ...
+      // Possible moves for queen
     } else if (piece === 6) {
-      // Generate possible moves for king
-      // ...
+      // Possible moves for king
     }
 
     return possibleMoves;
@@ -127,14 +122,18 @@ export class ChessGameEngine {
     kingPosition: [number, number],
     player: number,
   ): boolean {
-    const opponent = player === 1 ? 2 : 1;
     const board = gameState.board;
 
     for (let row = 0; row < board.length; row++) {
       for (let col = 0; col < board[row].length; col++) {
         const piece = board[row][col];
         if (piece !== 0 && piece !== player) {
-          const possibleMoves = this.generatePossibleMoves(gameState, player);
+          const possibleMoves = this.generatePossibleMovesForPieces(
+            gameState,
+            piece,
+            row,
+            col,
+          );
           if (possibleMoves.includes(kingPosition)) {
             return true;
           }
