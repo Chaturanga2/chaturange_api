@@ -85,6 +85,27 @@ export class ChessGameEngine {
 
     if (piece === 1) {
       // Possible moves for pawn
+      const direction = player === 1 ? 1 : -1;
+      const startingRow = player === 1 ? 1 : 6;
+
+      if (gameState.board[row + direction][col] === 0) {
+        possibleMoves.push([row + direction, col]);
+
+        if (
+          row === startingRow &&
+          gameState.board[row + 2 * direction][col] === 0
+        ) {
+          possibleMoves.push([row + 2 * direction, col]);
+        }
+      }
+
+      if (col > 0 && gameState.board[row + direction][col - 1] * player < 0) {
+        possibleMoves.push([row + direction, col - 1]);
+      }
+
+      if (col < 7 && gameState.board[row + direction][col + 1] * player < 0) {
+        possibleMoves.push([row + direction, col + 1]);
+      }
     } else if (piece === 2) {
       // Possible moves for knight
     } else if (piece === 3) {
@@ -171,6 +192,8 @@ export class ChessGameEngine {
   }
 
   private isGameOver(gameState: ChessGameState): boolean {
+    const board = gameState.board;
+    const player = gameState.currentPlayer;
     return false;
   }
 
