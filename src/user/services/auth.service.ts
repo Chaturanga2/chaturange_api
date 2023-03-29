@@ -30,7 +30,7 @@ export class AuthService {
       const isMatch = await bcrypt.compare(password, cachedData.password);
       if (!isMatch) {
         await this.cacheService.del('login');
-      } 
+      }
       throw new NotFoundException('User already connected');
     }
     // Find the user in the database
@@ -46,9 +46,13 @@ export class AuthService {
     // stor the refresh token in the database
     const refresh_token = this.jwtService.sign(
       { id: user._id },
-      { expiresIn: '30d' },
+      { expiresIn: '30d', secret: 'mamamia' },
     );
-    const token = this.jwtService.sign({ id: user._id }, { expiresIn: '5min' });
+    const token = this.jwtService.sign(
+      { username: user.username, id: user._id },
+      { expiresIn: '5m', secret: 'mamamia' },
+    );
+
     return { token, refresh_token };
   }
 

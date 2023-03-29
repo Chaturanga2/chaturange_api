@@ -1,8 +1,8 @@
 import {
-  Module,
   CacheModule,
-  NestModule,
   MiddlewareConsumer,
+  Module,
+  NestModule,
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
@@ -11,6 +11,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './user/user.module';
 import * as process from 'process';
 import * as redisStore from 'cache-manager-redis-store';
+import { AuthMiddleware } from './middleware/auth-middleware.service';
+import { UserController } from './user/controllers/user.controller';
+import { JwtService } from "@nestjs/jwt";
 
 @Module({
   imports: [
@@ -29,6 +32,10 @@ import * as redisStore from 'cache-manager-redis-store';
     MongooseModule.forRoot(process.env.MONGO_URI),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, JwtService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AuthMiddleware).forRoutes(UserController);
+  }
+}
