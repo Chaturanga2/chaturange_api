@@ -108,14 +108,56 @@ export class ChessGameEngine {
       }
     } else if (piece === 2) {
       // Possible moves for knight
+      const moves: number[][] = [
+        [-2, -1],
+        [-2, 1],
+        [-1, -2],
+        [-1, 2],
+        [1, -2],
+        [1, 2],
+        [2, -1],
+        [2, 1],
+      ];
     } else if (piece === 3) {
       // Possible moves for bishop
+      const directions: number[][] = [
+        [-1, -1],
+        [-1, 1],
+        [1, -1],
+        [1, 1],
+      ];
     } else if (piece === 4) {
       // Possible moves for rook
+      const directions: number[][] = [
+        [-1, 0],
+        [0, -1],
+        [1, 0],
+        [0, 1],
+      ];
     } else if (piece === 5) {
       // Possible moves for queen
+      const directions: number[][] = [
+        [-1, -1],
+        [-1, 0],
+        [-1, 1],
+        [0, -1],
+        [0, 1],
+        [1, -1],
+        [1, 0],
+        [1, 1],
+      ];
     } else if (piece === 6) {
       // Possible moves for king
+      const directions: number[][] = [
+        [-1, -1],
+        [-1, 0],
+        [-1, 1],
+        [0, -1],
+        [0, 1],
+        [1, -1],
+        [1, 0],
+        [1, 1],
+      ];
     }
 
     return possibleMoves;
@@ -194,6 +236,44 @@ export class ChessGameEngine {
   private isGameOver(gameState: ChessGameState): boolean {
     const board = gameState.board;
     const player = gameState.currentPlayer;
+    const opponent = player === 1 ? -1 : 1;
+
+    const opponentMoves = this.generatePossibleMoves(gameState, opponent);
+    const playerMoves = this.generatePossibleMoves(gameState, player);
+
+    const kingPosition = this.findKingPosition(board, opponent);
+
+    const opponentInCheck = this.isKingInCheck(
+      gameState,
+      kingPosition,
+      opponent,
+    );
+    const playerInCheck = this.isKingInCheck(gameState, kingPosition, player);
+
+    // Check for checkmate
+    if (opponentInCheck && opponentMoves.length === 0) {
+      return true;
+    }
+
+    // Check for stalemate
+    if (!playerInCheck && playerMoves.length === 0) {
+      return true;
+    }
+
+    // Check for insufficient material
+    const remainingPieces = board
+      .flat()
+      .filter((p) => p !== 0 && Math.abs(p) !== 6);
+
+    const hasInsufficientMaterial =
+      remainingPieces.length <= 2 ||
+      (remainingPieces.length === 3 &&
+        remainingPieces.every((p) => Math.abs(p) === 3 || Math.abs(p) === 6));
+
+    if (hasInsufficientMaterial) {
+      return true;
+    }
+
     return false;
   }
 
