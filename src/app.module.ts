@@ -13,7 +13,8 @@ import * as process from 'process';
 import * as redisStore from 'cache-manager-redis-store';
 import { AuthMiddleware } from './middleware/auth-middleware.service';
 import { UserController } from './user/controllers/user.controller';
-import { JwtService } from "@nestjs/jwt";
+import { JwtService } from '@nestjs/jwt';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -21,14 +22,15 @@ import { JwtService } from "@nestjs/jwt";
       envFilePath: '.env',
       isGlobal: true,
     }),
-    CacheModule.register({ 
+    CacheModule.register({
       store: redisStore,
       host: process.env.REDIS_HOST,
       port: process.env.REDIS_PORT,
-      isGlobal: true
+      isGlobal: true,
     }),
     MongooseModule.forRoot(process.env.MONGO_URI),
-    SocketModule
+    SocketModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService, JwtService],
