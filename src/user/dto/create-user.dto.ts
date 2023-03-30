@@ -1,5 +1,6 @@
 import {
   IsEmail,
+  IsEmpty,
   IsEnum,
   IsNotEmpty,
   IsString,
@@ -32,6 +33,14 @@ export class CreateUserDto {
   @IsNotEmpty()
   @IsString()
   readonly password_confirmation: string;
+
+  @IsEmpty()
+  @IsString()
+  readonly country: string;
+
+  @IsEmpty()
+  @IsString()
+  readonly biography: string;
 
   @IsNotEmpty()
   @IsEnum(Level)
