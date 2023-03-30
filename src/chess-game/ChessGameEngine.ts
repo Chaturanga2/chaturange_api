@@ -118,6 +118,18 @@ export class ChessGameEngine {
         [2, -1],
         [2, 1],
       ];
+
+      for (let i = 0; i < moves.length; i++) {
+        const newRow = row + moves[i][0];
+        const newCol = col + moves[i][1];
+
+        if (newRow >= 0 && newRow <= 7 && newCol >= 0 && newCol <= 7) {
+          const pieceAtNewPosition = gameState.board[newRow][newCol];
+          if (pieceAtNewPosition === 0 || pieceAtNewPosition * player < 0) {
+            possibleMoves.push([newRow, newCol]);
+          }
+        }
+      }
     } else if (piece === 3) {
       // Possible moves for bishop
       const directions: number[][] = [
