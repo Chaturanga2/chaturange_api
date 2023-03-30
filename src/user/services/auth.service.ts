@@ -5,12 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from '../schemas/user.schema';
+import { Level, User } from '../schemas/user.schema';
 import { Model } from 'mongoose';
 import { LoginUserDto } from '../dto/auth/LoginUser.dto';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { Cache } from 'cache-manager';
+import { CreateUserDto } from '../dto/create-user.dto';
+import { UserLoginType } from '../../types/user.types';
 
 @Injectable()
 export class AuthService {
@@ -21,16 +23,14 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async login(
-    loginUserDto: LoginUserDto,
-  ): Promise<{ token: string; refresh_token: string }> {
+  async login(loginUserDto: LoginUserDto): Promise<UserLoginType> {
     const { email, password } = loginUserDto;
     const cachedData = await this.cacheService.get<LoginUserDto>('login');
     if (cachedData) {
       const isMatch = await bcrypt.compare(password, cachedData.password);
       if (!isMatch) {
         await this.cacheService.del('login');
-      } 
+      }
       throw new NotFoundException('User already connected');
     }
     // Find the user in the database
@@ -46,17 +46,54 @@ export class AuthService {
     // stor the refresh token in the database
     const refresh_token = this.jwtService.sign(
       { id: user._id },
-      { expiresIn: '30d' },
+      { expiresIn: '30d', secret: 'mamamia' },
     );
-    const token = this.jwtService.sign({ id: user._id }, { expiresIn: '5min' });
-    return { token, refresh_token };
+    const token = this.jwtService.sign(
+      { username: user.username, id: user._id },
+      { expiresIn: '5m', secret: 'mamamia' },
+    );
+
+    return {
+      token,
+      refresh_token,
+      user: {
+        id: user._id,
+        username: user.username,
+      },
+    };
   }
 
-  async refresh(refreshToken: string): Promise<any> {
+  /**
+   * @description create a new user
+   * @param createUserDto
+   * @returns {Promise<User>}
+   */
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    // destructure the createUserDto object
+    const { first_name, last_name, username, email, password } = createUserDto;
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    // Create a new user object
+    return await this.userModel.create({
+      first_name,
+      last_name,
+      username,
+      email,
+      password: hashedPassword,
+      level: Level.BEGINNER,
+    });
+  }
+
+  logout(): void {
+    this.cacheService.del('login');
+    // delete the refresh token
+  }
+
+  async refresh(refreshToken: string): Promise<{ access_token: string }> {
     try {
       const payload = this.jwtService.verify(refreshToken);
       const accessToken = this.jwtService.sign(payload, {
-        expiresIn: '30m',
+        expiresIn: '3m',
       });
       return {
         access_token: accessToken,
