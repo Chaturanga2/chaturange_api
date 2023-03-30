@@ -167,6 +167,27 @@ export class ChessGameEngine {
         [1, 0],
         [0, 1],
       ];
+
+      for (let i = 0; i < directions.length; i++) {
+        const [dx, dy] = directions[i];
+        let newRow = row + dx;
+        let newCol = col + dy;
+
+        while (newRow >= 0 && newRow <= 7 && newCol >= 0 && newCol <= 7) {
+          const pieceAtNewPosition = gameState.board[newRow][newCol];
+          if (pieceAtNewPosition === 0) {
+            possibleMoves.push([newRow, newCol]);
+          } else {
+            if (pieceAtNewPosition * player < 0) {
+              possibleMoves.push([newRow, newCol]);
+            }
+            break;
+          }
+
+          newRow += dx;
+          newCol += dy;
+        }
+      }
     } else if (piece === 5) {
       // Possible moves for queen
       const directions: number[][] = [
@@ -210,6 +231,18 @@ export class ChessGameEngine {
         [1, 0],
         [1, 1],
       ];
+
+      for (let i = 0; i < directions.length; i++) {
+        const newRow = row + directions[i][0];
+        const newCol = col + directions[i][1];
+
+        if (newRow >= 0 && newRow <= 7 && newCol >= 0 && newCol <= 7) {
+          const pieceAtNewPosition = gameState.board[newRow][newCol];
+          if (pieceAtNewPosition === 0 || pieceAtNewPosition * player < 0) {
+            possibleMoves.push([newRow, newCol]);
+          }
+        }
+      }
     }
 
     return possibleMoves;
@@ -283,6 +316,38 @@ export class ChessGameEngine {
     }
 
     return score;
+  }
+
+  private hasLegalMoves(
+    gameState: ChessGameState,
+    kingPosition: [number, number],
+  ): boolean {
+    const board = gameState.board;
+    const player = gameState.currentPlayer;
+
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 8; col++) {
+        const piece = board[row][col];
+
+        if (piece * player > 0) {
+          const possibleMoves = this.generatePossibleMovesForPieces(
+            gameState,
+            piece,
+            row,
+            col,
+          );
+
+          for (let i = 0; i < possibleMoves.length; i++) {
+            const newGameState = this.makeMove(gameState, possibleMoves[i]);
+
+            if (!this.isKingInCheck(newGameState, kingPosition, player)) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
   }
 
   private isGameOver(gameState: ChessGameState): boolean {
