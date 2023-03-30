@@ -138,6 +138,27 @@ export class ChessGameEngine {
         [1, -1],
         [1, 1],
       ];
+
+      for (let i = 0; i < directions.length; i++) {
+        const [dx, dy] = directions[i];
+        let newRow = row + dx;
+        let newCol = col + dy;
+
+        while (newRow >= 0 && newRow <= 7 && newCol >= 0 && newCol <= 7) {
+          const pieceAtNewPosition = gameState.board[newRow][newCol];
+          if (pieceAtNewPosition === 0) {
+            possibleMoves.push([newRow, newCol]);
+          } else {
+            if (pieceAtNewPosition * player < 0) {
+              possibleMoves.push([newRow, newCol]);
+            }
+            break;
+          }
+
+          newRow += dx;
+          newCol += dy;
+        }
+      }
     } else if (piece === 4) {
       // Possible moves for rook
       const directions: number[][] = [
@@ -158,6 +179,25 @@ export class ChessGameEngine {
         [1, 0],
         [1, 1],
       ];
+
+      for (let i = 0; i < directions.length; i++) {
+        let newRow = row + directions[i][0];
+        let newCol = col + directions[i][1];
+
+        while (newRow >= 0 && newRow <= 7 && newCol >= 0 && newCol <= 7) {
+          const pieceAtNewPosition = gameState.board[newRow][newCol];
+          if (pieceAtNewPosition === 0) {
+            possibleMoves.push([newRow, newCol]);
+          } else {
+            if (pieceAtNewPosition * player < 0) {
+              possibleMoves.push([newRow, newCol]);
+            }
+            break;
+          }
+          newRow += directions[i][0];
+          newCol += directions[i][1];
+        }
+      }
     } else if (piece === 6) {
       // Possible moves for king
       const directions: number[][] = [
