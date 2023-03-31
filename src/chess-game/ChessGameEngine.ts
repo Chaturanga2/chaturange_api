@@ -8,7 +8,7 @@ export class ChessGameEngine {
   }
 
   generatePossibleMoves(gameState: ChessGameState, player: number): number[][] {
-    let possibleMoves: number[][] = [];
+    const possibleMoves: number[][] = [];
 
     for (let row = 0; row < 8; row++) {
       for (let col = 0; col < 8; col++) {
@@ -18,56 +18,13 @@ export class ChessGameEngine {
           continue;
         }
 
-        switch (Math.abs(piece)) {
-          case 1: // Pawn
-            possibleMoves = this.generatePossibleMovesForPieces(
-              gameState,
-              piece,
-              row,
-              col,
-            );
-            break;
-          case 2: // Knight
-            possibleMoves = this.generatePossibleMovesForPieces(
-              gameState,
-              piece,
-              row,
-              col,
-            );
-            break;
-          case 3: // Bishop
-            possibleMoves = this.generatePossibleMovesForPieces(
-              gameState,
-              piece,
-              row,
-              col,
-            );
-            break;
-          case 4: // Rook
-            possibleMoves = this.generatePossibleMovesForPieces(
-              gameState,
-              piece,
-              row,
-              col,
-            );
-            break;
-          case 5: // Queen
-            possibleMoves = this.generatePossibleMovesForPieces(
-              gameState,
-              piece,
-              row,
-              col,
-            );
-            break;
-          case 6: // King
-            possibleMoves = this.generatePossibleMovesForPieces(
-              gameState,
-              piece,
-              row,
-              col,
-            );
-            break;
-        }
+        const pieceMoves = this.generatePossibleMovesForPieces(
+          gameState,
+          piece,
+          row,
+          col,
+        );
+        possibleMoves.push(...pieceMoves);
       }
     }
 
@@ -80,7 +37,7 @@ export class ChessGameEngine {
     row: number,
     col: number,
   ): number[][] {
-    const possibleMoves: number[][] = [];
+    const possibleMovesForPiece: number[][] = [];
     const player = gameState.currentPlayer;
 
     if (piece === 1) {
@@ -89,26 +46,26 @@ export class ChessGameEngine {
       const startingRow = player === 1 ? 1 : 6;
 
       if (gameState.board[row + direction][col] === 0) {
-        possibleMoves.push([row + direction, col]);
+        possibleMovesForPiece.push([row + direction, col]);
 
         if (
           row === startingRow &&
           gameState.board[row + 2 * direction][col] === 0
         ) {
-          possibleMoves.push([row + 2 * direction, col]);
+          possibleMovesForPiece.push([row + 2 * direction, col]);
         }
       }
 
       if (col > 0 && gameState.board[row + direction][col - 1] * player < 0) {
-        possibleMoves.push([row + direction, col - 1]);
+        possibleMovesForPiece.push([row + direction, col - 1]);
       }
 
       if (col < 7 && gameState.board[row + direction][col + 1] * player < 0) {
-        possibleMoves.push([row + direction, col + 1]);
+        possibleMovesForPiece.push([row + direction, col + 1]);
       }
     } else if (piece === 2) {
       // Possible moves for knight
-      const moves: number[][] = [
+      const directions: number[][] = [
         [-2, -1],
         [-2, 1],
         [-1, -2],
@@ -119,14 +76,14 @@ export class ChessGameEngine {
         [2, 1],
       ];
 
-      for (let i = 0; i < moves.length; i++) {
-        const newRow = row + moves[i][0];
-        const newCol = col + moves[i][1];
+      for (let i = 0; i < directions.length; i++) {
+        const newRow = row + directions[i][0];
+        const newCol = col + directions[i][1];
 
         if (newRow >= 0 && newRow <= 7 && newCol >= 0 && newCol <= 7) {
           const pieceAtNewPosition = gameState.board[newRow][newCol];
           if (pieceAtNewPosition === 0 || pieceAtNewPosition * player < 0) {
-            possibleMoves.push([newRow, newCol]);
+            possibleMovesForPiece.push([newRow, newCol]);
           }
         }
       }
@@ -147,10 +104,10 @@ export class ChessGameEngine {
         while (newRow >= 0 && newRow <= 7 && newCol >= 0 && newCol <= 7) {
           const pieceAtNewPosition = gameState.board[newRow][newCol];
           if (pieceAtNewPosition === 0) {
-            possibleMoves.push([newRow, newCol]);
+            possibleMovesForPiece.push([newRow, newCol]);
           } else {
             if (pieceAtNewPosition * player < 0) {
-              possibleMoves.push([newRow, newCol]);
+              possibleMovesForPiece.push([newRow, newCol]);
             }
             break;
           }
@@ -176,10 +133,10 @@ export class ChessGameEngine {
         while (newRow >= 0 && newRow <= 7 && newCol >= 0 && newCol <= 7) {
           const pieceAtNewPosition = gameState.board[newRow][newCol];
           if (pieceAtNewPosition === 0) {
-            possibleMoves.push([newRow, newCol]);
+            possibleMovesForPiece.push([newRow, newCol]);
           } else {
             if (pieceAtNewPosition * player < 0) {
-              possibleMoves.push([newRow, newCol]);
+              possibleMovesForPiece.push([newRow, newCol]);
             }
             break;
           }
@@ -208,10 +165,10 @@ export class ChessGameEngine {
         while (newRow >= 0 && newRow <= 7 && newCol >= 0 && newCol <= 7) {
           const pieceAtNewPosition = gameState.board[newRow][newCol];
           if (pieceAtNewPosition === 0) {
-            possibleMoves.push([newRow, newCol]);
+            possibleMovesForPiece.push([newRow, newCol]);
           } else {
             if (pieceAtNewPosition * player < 0) {
-              possibleMoves.push([newRow, newCol]);
+              possibleMovesForPiece.push([newRow, newCol]);
             }
             break;
           }
@@ -239,13 +196,13 @@ export class ChessGameEngine {
         if (newRow >= 0 && newRow <= 7 && newCol >= 0 && newCol <= 7) {
           const pieceAtNewPosition = gameState.board[newRow][newCol];
           if (pieceAtNewPosition === 0 || pieceAtNewPosition * player < 0) {
-            possibleMoves.push([newRow, newCol]);
+            possibleMovesForPiece.push([newRow, newCol]);
           }
         }
       }
     }
 
-    return possibleMoves;
+    return possibleMovesForPiece;
   }
 
   private findKingPosition(
@@ -368,12 +325,20 @@ export class ChessGameEngine {
     const playerInCheck = this.isKingInCheck(gameState, kingPosition, player);
 
     // Check for checkmate
-    if (opponentInCheck && opponentMoves.length === 0) {
+    if (
+      opponentInCheck &&
+      !this.hasLegalMoves(gameState, kingPosition) &&
+      opponentMoves.length === 0
+    ) {
       return true;
     }
 
     // Check for stalemate
-    if (!playerInCheck && playerMoves.length === 0) {
+    if (
+      !playerInCheck &&
+      !this.hasLegalMoves(gameState, kingPosition) &&
+      playerMoves.length === 0
+    ) {
       return true;
     }
 
@@ -457,7 +422,6 @@ export class ChessGameEngine {
 
     for (const move of possibleMoves) {
       const newGameState = gameState.clone();
-      newGameState.applyMove(move);
 
       const score = this.evaluateGameState(
         newGameState,
@@ -466,6 +430,8 @@ export class ChessGameEngine {
         -Infinity,
         Infinity,
       );
+
+      newGameState.applyMove(move);
 
       if (score > bestScore) {
         bestScore = score;
