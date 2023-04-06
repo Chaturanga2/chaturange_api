@@ -7,6 +7,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { ChessGameService } from '../chess-game/chess-game.service';
 
 @WebSocketGateway({
   cors: {
@@ -14,8 +15,12 @@ import { Server, Socket } from 'socket.io';
   },
 })
 export class GameEvents {
+  constructor(private readonly chessGameService: ChessGameService) {}
   @WebSocketServer()
   server: Server;
+
+  // constructor(private chessGameService: ChessGameService) {}
+  // constructor(private readonly chessGameService: ChessGameService) {}
 
   // Connexion
   handleConnection(client: Socket) {
@@ -44,5 +49,16 @@ export class GameEvents {
 
     // Diffuser l'événement "move" à tous les clients connectés
     this.server.emit('move', positionData);
+  }
+
+  @SubscribeMessage('getBoard')
+  getBoard(
+    @MessageBody() positionData: any,
+    @ConnectedSocket() client: Socket,
+  ) {
+    console.log('gma:', this.chessGameService.generatePieces());
+
+    // Diffuser l'événement "move" à tous les clients connectés
+    this.server.emit('getBoard', this.chessGameService.generatePieces());
   }
 }
