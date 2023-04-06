@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { CellType, Piece } from '../types/chess.types';
+import { CellType, GameSocketEmitType, Piece } from '../types/chess.types';
 
 @Injectable()
 export class ChessGameService {
   public readonly y_axis = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', ''];
   public readonly x_axis = [1, 2, 3, 4, 5, 6, 7, 8];
-
   public readonly board: CellType[][] = [];
+  public readonly socketEvents: GameSocketEmitType = {} as GameSocketEmitType;
 
   public generatePieces(): Array<{
     x: number;
@@ -130,15 +130,17 @@ export class ChessGameService {
     oldCell: CellType,
     newCell: CellType,
     currentPlayer: string,
-  ): CellType {
+  ): GameSocketEmitType {
     // Vérifier si la case de départ contient un pion de la bonne couleur
     if (
       !oldCell.piece ||
       oldCell.piece.color !== currentPlayer ||
       oldCell.piece.symbol !== 'p'
     ) {
-      console.log(`cest au tour du joueur ${currentPlayer}`);
-      return newCell;
+      this.socketEvents.message = `C'est au tour du joueur ${currentPlayer}`;
+      this.socketEvents.currentPlayer = currentPlayer;
+      this.socketEvents.board = board;
+      return this.socketEvents;
     }
     // Calculer la direction de déplacement du pion
     const direction = currentPlayer === 'w' ? 1 : -1;
@@ -149,20 +151,32 @@ export class ChessGameService {
       if (oldCell.x + direction === newCell.x && !newCell.piece) {
         // Déplacement simple
 
-        newCell.piece = oldCell.piece;
-        newCell.piece.moved = true;
-        oldCell.piece = null;
-        return newCell;
+        // newCell.piece = oldCell.piece;
+        board[newCell.x][this.y_axis.indexOf(newCell.y)].piece = oldCell.piece;
+        board[oldCell.x][this.y_axis.indexOf(oldCell.y)].piece = null;
+
+        this.socketEvents.currentPlayer = currentPlayer === 'w' ? 'b' : 'w';
+        this.socketEvents.message = `C'est au tour du joueur ${currentPlayer}`;
+        this.socketEvents.board = board;
+        // Générer l'historique du coup
+        this.historyMove(currentPlayer, oldCell, newCell);
+        return this.socketEvents;
       } else if (
         oldCell.x + direction * 2 === newCell.x &&
         !oldCell.piece.moved &&
         !newCell.piece
       ) {
         // Déplacement double au premier coup
-        newCell.piece = oldCell.piece;
-        newCell.piece.moved = true;
-        oldCell.piece = null;
-        return newCell;
+        // newCell.piece = oldCell.piece;
+        board[newCell.x][this.y_axis.indexOf(newCell.y)].piece = oldCell.piece;
+        board[oldCell.x][this.y_axis.indexOf(oldCell.y)].piece = null;
+
+        this.socketEvents.currentPlayer = currentPlayer === 'w' ? 'b' : 'w';
+        this.socketEvents.message = `C'est au tour du joueur ${currentPlayer}`;
+        this.socketEvents.board = board;
+        // Générer l'historique du coup
+        this.historyMove(currentPlayer, oldCell, newCell);
+        return this.socketEvents;
       }
     } else if (
       Math.abs(
@@ -173,14 +187,23 @@ export class ChessGameService {
       // Prise en diagonale
       const toCell = newCell;
       if (toCell.piece && toCell.piece.color !== currentPlayer) {
-        newCell.piece = oldCell.piece;
-        newCell.piece.moved = true;
-        oldCell.piece = null;
-        return newCell;
+        // newCell.piece = oldCell.piece;
+        board[newCell.x][this.y_axis.indexOf(newCell.y)].piece = oldCell.piece;
+        board[oldCell.x][this.y_axis.indexOf(oldCell.y)].piece = null;
+
+        this.socketEvents.currentPlayer = currentPlayer === 'w' ? 'b' : 'w';
+        this.socketEvents.message = `C'est au tour du joueur ${currentPlayer}`;
+        this.socketEvents.board = board;
+        // Générer l'historique du coup
+        this.historyMove(currentPlayer, oldCell, newCell);
+        return this.socketEvents;
       }
     }
 
-    return newCell;
+    this.socketEvents.message = `Movement invalide`;
+    this.socketEvents.board = board;
+    this.socketEvents.currentPlayer = currentPlayer;
+    return this.socketEvents;
   }
 
   public movePieces(
@@ -189,12 +212,23 @@ export class ChessGameService {
     oldCell: CellType,
     newCell: CellType,
     currentPlayer: string,
-  ): CellType {
+  ): GameSocketEmitType {
     switch (pieceName) {
       case 'pawn':
         return this.movePawn(board, oldCell, newCell, currentPlayer);
       default:
-        return newCell;
+        this.socketEvents.message = `Movement invalide`;
+        this.socketEvents.board = board;
+        this.socketEvents.currentPlayer = currentPlayer;
+        return this.socketEvents;
     }
+  }
+
+  public historyMove(
+    currentPlayer: string,
+    oldCell: CellType,
+    newCell: CellType,
+  ): void {
+    this.socketEvents.shot = `P->${newCell.x}${newCell.y}`;
   }
 }

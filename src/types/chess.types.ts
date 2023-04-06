@@ -10,3 +10,10 @@ export type CellType = {
   y: string;
   piece: Piece;
 };
+
+export type GameSocketEmitType = {
+  message: string;
+  currentPlayer: string;
+  shot?: string;
+  board: CellType[][];
+};
