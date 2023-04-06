@@ -8,6 +8,34 @@ export class ChessGameService {
 
   public readonly board: CellType[][] = [];
 
+  public moveKnight(
+    board: CellType[][],
+    oldCell: CellType,
+    newCell: CellType,
+    currentPlayer: string,
+  ): boolean {
+    const knight = oldCell.piece;
+
+    // Vérifier si la case de départ contient un cavalier de la bonne couleur
+    if (!knight || knight.color !== currentPlayer || knight.symbol !== 'n') {
+      return false;
+    }
+
+    // Vérifier si le déplacement est valide
+    const xDiff = Math.abs(oldCell.x - newCell.x);
+    const yDiff = Math.abs(
+      this.y_axis.indexOf(oldCell.y) - this.y_axis.indexOf(newCell.y),
+    );
+    if ((xDiff === 2 && yDiff === 1) || (xDiff === 1 && yDiff === 2)) {
+      // Déplacement
+      newCell.piece = knight;
+      oldCell.piece = null;
+
+      return true;
+    }
+    return false;
+  }
+
   public moveBishop(
     board: CellType[][],
     oldCell: CellType,
@@ -65,24 +93,24 @@ export class ChessGameService {
     // Vérifier si le déplacement est valide
     if (oldCell.x === newCell.x) {
       // Déplacement horizontal
-      const min = Math.min(
+      const start = Math.min(
         this.y_axis.indexOf(oldCell.y),
         this.y_axis.indexOf(newCell.y),
       );
-      const max = Math.max(
+      const end = Math.max(
         this.y_axis.indexOf(oldCell.y),
         this.y_axis.indexOf(newCell.y),
       );
-      for (let i = min + 1; i < max; i++) {
+      for (let i = start + 1; i < end; i++) {
         if (board[oldCell.x][i].piece) {
           return false;
         }
       }
     } else if (oldCell.y === newCell.y) {
       // Déplacement vertical
-      const min = Math.min(oldCell.x, newCell.x);
-      const max = Math.max(oldCell.x, newCell.x);
-      for (let i = min + 1; i < max; i++) {
+      const start = Math.min(oldCell.x, newCell.x);
+      const end = Math.max(oldCell.x, newCell.x);
+      for (let i = start + 1; i < end; i++) {
         if (board[i][this.y_axis.indexOf(oldCell.y)].piece) {
           return false;
         }
