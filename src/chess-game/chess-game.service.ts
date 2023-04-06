@@ -8,123 +8,6 @@ export class ChessGameService {
   public readonly board: CellType[][] = [];
   public readonly socketEvents: GameSocketEmitType = {} as GameSocketEmitType;
 
-  public generatePieces(): Array<{
-    x: number;
-    y: string;
-    s: string;
-    color: string;
-    image: string;
-  }> {
-    const pieces = [];
-    for (let position = 0; position < 2; position++) {
-      const type = position === 0 ? 'w' : 'b';
-      const x_pos = position === 0 ? 0 : 7;
-
-      pieces.push(
-        {
-          x: x_pos,
-          y: 'a',
-          s: 'r',
-          color: type,
-          image: require(`@/assets/pions/rook_${type}.png`),
-        },
-        {
-          x: x_pos,
-          y: 'b',
-          s: 'n',
-          color: type,
-          image: require(`@/assets/pions/knight_${type}.png`),
-        },
-        {
-          x: x_pos,
-          y: 'c',
-          s: 'b',
-          color: type,
-          image: require(`@/assets/pions/bishop_${type}.png`),
-        },
-        {
-          x: x_pos,
-          y: 'd',
-          s: 'q',
-          color: type,
-          image: require(`@/assets/pions/queen_${type}.png`),
-        },
-        {
-          x: x_pos,
-          y: 'e',
-          s: 'k',
-          color: type,
-          image: require(`@/assets/pions/king_${type}.png`),
-        },
-        {
-          x: x_pos,
-          y: 'f',
-          s: 'b',
-          color: type,
-          image: require(`@/assets/pions/bishop_${type}.png`),
-        },
-        {
-          x: x_pos,
-          y: 'g',
-          s: 'n',
-          color: type,
-          image: require(`@/assets/pions/knight_${type}.png`),
-        },
-        {
-          x: x_pos,
-          y: 'h',
-          s: 'r',
-          color: type,
-          image: require(`@/assets/pions/rook_${type}.png`),
-        },
-      );
-    }
-    for (let i = 0; i < 8; i++) {
-      pieces.push(
-        {
-          x: 1,
-          y: this.y_axis[i],
-          s: 'p',
-          color: 'w',
-          image: require('@/assets/pions/pawn_w.png'),
-        },
-        {
-          x: 6,
-          y: this.y_axis[i],
-          s: 'p',
-          color: 'b',
-          image: require('@/assets/pions/pawn_b.png'),
-        },
-      );
-    }
-
-    return pieces;
-  }
-
-  public generateBoard(): CellType[][] {
-    for (let i = 0; i < this.x_axis.length; i++) {
-      const row: CellType[] = [];
-      for (let j = 0; j < this.y_axis.length; j++) {
-        const cell: CellType = { x: i, y: this.y_axis[j], piece: null };
-        const piece = this.generatePieces().find(
-          (p) => p.x === i && p.y === this.y_axis[j],
-        );
-        if (piece) {
-          cell.piece = {
-            moved: false,
-            image: piece.image,
-            symbol: piece.s,
-            color: piece.color,
-          };
-        }
-        row.push(cell);
-      }
-      this.board.push(row);
-    }
-    console.log(this.board);
-    return this.board;
-  }
-
   public movePawn(
     board: CellType[][],
     oldCell: CellType,
@@ -137,10 +20,7 @@ export class ChessGameService {
       oldCell.piece.color !== currentPlayer ||
       oldCell.piece.symbol !== 'p'
     ) {
-      this.socketEvents.message = `C'est au tour du joueur ${currentPlayer}`;
-      this.socketEvents.currentPlayer = currentPlayer;
-      this.socketEvents.board = board;
-      return this.socketEvents;
+      return this.invalidMove(currentPlayer, board, "C'est au tour du joueur");
     }
     // Calculer la direction de déplacement du pion
     const direction = currentPlayer === 'w' ? 1 : -1;
@@ -171,10 +51,255 @@ export class ChessGameService {
         return this.initReturnSocket(currentPlayer, board, oldCell, newCell);
       }
     }
-    this.socketEvents.message = `Movement invalide`;
-    this.socketEvents.board = board;
-    this.socketEvents.currentPlayer = currentPlayer;
-    return this.socketEvents;
+    return this.invalidMove(currentPlayer, board, 'Movement invalide');
+  }
+
+  public moveRook(
+    board: CellType[][],
+    oldCell: CellType,
+    newCell: CellType,
+    currentPlayer: string,
+  ): GameSocketEmitType {
+    const rook = oldCell.piece;
+
+    // Vérifier si la case de départ contient une tour de la bonne couleur
+    if (
+      !oldCell.piece ||
+      oldCell.piece.color !== currentPlayer ||
+      oldCell.piece.symbol !== 'r'
+    ) {
+      this.socketEvents.message = `C'est au tour du joueur ${currentPlayer}`;
+      this.socketEvents.currentPlayer = currentPlayer;
+      this.socketEvents.board = board;
+      return this.socketEvents;
+    }
+
+    // Vérifier si le déplacement est valide
+    if (oldCell.x === newCell.x) {
+      // Déplacement horizontal
+      const min = Math.min(
+        this.y_axis.indexOf(oldCell.y),
+        this.y_axis.indexOf(newCell.y),
+      );
+      const max = Math.max(
+        this.y_axis.indexOf(oldCell.y),
+        this.y_axis.indexOf(newCell.y),
+      );
+      for (let i = min + 1; i < max; i++) {
+        if (board[oldCell.x][i].piece) {
+          this.socketEvents.message = `Movement invalide`;
+          this.socketEvents.board = board;
+          this.socketEvents.currentPlayer = currentPlayer;
+          return this.socketEvents;
+        }
+      }
+    } else if (oldCell.y === newCell.y) {
+      // Déplacement vertical
+      const min = Math.min(oldCell.x, newCell.x);
+      const max = Math.max(oldCell.x, newCell.x);
+      for (let i = min + 1; i < max; i++) {
+        if (board[i][this.y_axis.indexOf(oldCell.y)].piece) {
+          this.socketEvents.message = `Movement invalide`;
+          this.socketEvents.board = board;
+          this.socketEvents.currentPlayer = currentPlayer;
+          return this.socketEvents;
+        }
+      }
+    } else {
+      this.socketEvents.message = `Movement invalide`;
+      this.socketEvents.board = board;
+      this.socketEvents.currentPlayer = currentPlayer;
+      return this.socketEvents;
+    }
+
+    // Déplacement
+    return this.initReturnSocket(currentPlayer, board, oldCell, newCell);
+  }
+
+  public moveKnight(
+    board: CellType[][],
+    oldCell: CellType,
+    newCell: CellType,
+    currentPlayer: string,
+  ): GameSocketEmitType {
+    const knight = oldCell.piece;
+
+    // Vérifier si la case de départ contient un cavalier de la bonne couleur
+    if (
+      !oldCell.piece ||
+      oldCell.piece.color !== currentPlayer ||
+      oldCell.piece.symbol !== 'n'
+    ) {
+      return this.invalidMove(currentPlayer, board, "C'est au tour du joueur");
+    }
+
+    /// Vérifier si le déplacement est valide
+    const x = Math.abs(oldCell.x - newCell.x);
+    const y = Math.abs(
+      this.y_axis.indexOf(oldCell.y) - this.y_axis.indexOf(newCell.y),
+    );
+    if ((x === 2 && y === 1) || (x === 1 && y === 2)) {
+      // Déplacement
+      return this.initReturnSocket(currentPlayer, board, oldCell, newCell);
+    }
+    return this.invalidMove(currentPlayer, board, 'Movement invalide');
+  }
+
+  public moveBishop(
+    board: CellType[][],
+    oldCell: CellType,
+    newCell: CellType,
+    currentPlayer: string,
+  ): GameSocketEmitType {
+    // Vérifier si la case de départ contient un fou de la bonne couleur
+    if (
+      !oldCell.piece ||
+      oldCell.piece.color !== currentPlayer ||
+      oldCell.piece.symbol !== 'b'
+    ) {
+      return this.invalidMove(currentPlayer, board, "C'est au tour du joueur");
+    }
+
+    // Vérifier si le déplacement est valide
+    const xDiff = Math.abs(oldCell.x - newCell.x);
+    const yDiff = Math.abs(
+      this.y_axis.indexOf(oldCell.y) - this.y_axis.indexOf(newCell.y),
+    );
+    if (xDiff !== yDiff) {
+      return this.invalidMove(currentPlayer, board, 'Movement invalide');
+    }
+    const xDirection = oldCell.x < newCell.x ? 1 : -1;
+    const yDirection =
+      this.y_axis.indexOf(oldCell.y) < this.y_axis.indexOf(newCell.y) ? 1 : -1;
+    for (let i = 1; i < xDiff; i++) {
+      const currentCell =
+        board[oldCell.x + i * xDirection][
+          this.y_axis.indexOf(oldCell.y) + i * yDirection
+        ];
+      if (currentCell.piece) {
+        return this.invalidMove(currentPlayer, board, 'Movement invalide');
+      }
+    }
+
+    // Déplacement
+    newCell.piece = oldCell.piece;
+    oldCell.piece = null;
+
+    return this.initReturnSocket(currentPlayer, board, oldCell, newCell);
+  }
+
+  public moveQueen(
+    board: CellType[][],
+    oldCell: CellType,
+    newCell: CellType,
+    currentPlayer: string,
+  ): GameSocketEmitType {
+    // Vérifier si la case de départ contient une reine de la bonne couleur
+    if (
+      !oldCell.piece ||
+      oldCell.piece.color !== currentPlayer ||
+      oldCell.piece.symbol !== 'q'
+    ) {
+      return this.invalidMove(currentPlayer, board, "C'est au tour du joueur");
+    }
+
+    // Vérifier si le déplacement est valide
+    const xDiff = Math.abs(oldCell.x - newCell.x);
+    const yDiff = Math.abs(
+      this.y_axis.indexOf(oldCell.y) - this.y_axis.indexOf(newCell.y),
+    );
+    const isDiagonal = xDiff === yDiff;
+    const isHorizontal = oldCell.x === newCell.x;
+    const isVertical = oldCell.y === newCell.y;
+
+    if (!isDiagonal && !isHorizontal && !isVertical) {
+      return this.invalidMove(
+        currentPlayer,
+        board,
+        'Movement invalide du joueur',
+      );
+    }
+
+    if (isDiagonal) {
+      const xDirection = newCell.x > oldCell.x ? 1 : -1;
+      const yDirection = newCell.y > oldCell.y ? 1 : -1;
+      let x = oldCell.x + xDirection;
+      let y = this.y_axis.indexOf(oldCell.y) + yDirection;
+      while (x !== newCell.x && y !== this.y_axis.indexOf(newCell.y)) {
+        if (board[x][y].piece) {
+          return this.invalidMove(
+            currentPlayer,
+            board,
+            'Movement invalide du joueur',
+          );
+        }
+        x += xDirection;
+        y += yDirection;
+      }
+    } else if (isHorizontal) {
+      const start = Math.min(
+        this.y_axis.indexOf(oldCell.y),
+        this.y_axis.indexOf(newCell.y),
+      );
+      const end = Math.max(
+        this.y_axis.indexOf(oldCell.y),
+        this.y_axis.indexOf(newCell.y),
+      );
+      for (let i = start + 1; i < end; i++) {
+        if (board[oldCell.x][i].piece) {
+          return this.invalidMove(
+            currentPlayer,
+            board,
+            'Movement invalide du joueur',
+          );
+        }
+      }
+    } else if (isVertical) {
+      const start = Math.min(oldCell.x, newCell.x);
+      const end = Math.max(oldCell.x, newCell.x);
+      for (let i = start + 1; i < end; i++) {
+        if (board[i][this.y_axis.indexOf(oldCell.y)].piece) {
+          return this.invalidMove(
+            currentPlayer,
+            board,
+            'Movement invalide du joueur',
+          );
+        }
+      }
+    }
+
+    // Déplacement
+    return this.initReturnSocket(currentPlayer, board, oldCell, newCell);
+  }
+
+  public moveKing(
+    board: CellType[][],
+    oldCell: CellType,
+    newCell: CellType,
+    currentPlayer: string,
+  ): GameSocketEmitType {
+    const king = oldCell.piece;
+
+    // Vérifier si la case de départ contient un roi de la bonne couleur
+    if (
+      !oldCell.piece ||
+      oldCell.piece.color !== currentPlayer ||
+      oldCell.piece.symbol !== 'k'
+    ) {
+      return this.invalidMove(currentPlayer, board, "C'est au tour du joueur");
+    }
+    // Vérifier si le déplacement est valide
+    const xDiff = oldCell.x === newCell.x ? 0 : 1;
+    const yDiff =
+      this.y_axis.indexOf(oldCell.y) - this.y_axis.indexOf(newCell.y);
+    if (xDiff > 1 || yDiff > 1) {
+      return this.invalidMove(
+        currentPlayer,
+        board,
+        'Movement invalide du joueur',
+      );
+    }
+    return this.initReturnSocket(currentPlayer, board, oldCell, newCell);
   }
 
   public movePieces(
@@ -184,23 +309,30 @@ export class ChessGameService {
     newCell: CellType,
     currentPlayer: string,
   ): GameSocketEmitType {
-    switch (pieceName) {
-      case 'pawn':
-        return this.movePawn(board, oldCell, newCell, currentPlayer);
-      default:
-        this.socketEvents.message = `Movement invalide`;
-        this.socketEvents.board = board;
-        this.socketEvents.currentPlayer = currentPlayer;
-        return this.socketEvents;
+    if (pieceName === 'pawn') {
+      return this.movePawn(board, oldCell, newCell, currentPlayer);
+    } else if (pieceName === 'rook') {
+      return this.moveRook(board, oldCell, newCell, currentPlayer);
+    } else if (pieceName === 'knight') {
+      return this.moveKnight(board, oldCell, newCell, currentPlayer);
+    } else if (pieceName === 'bishop') {
+      return this.moveBishop(board, oldCell, newCell, currentPlayer);
+    } else if (pieceName === 'queen') {
+      return this.moveQueen(board, oldCell, newCell, currentPlayer);
+    } else if (pieceName === 'king') {
+      return this.moveKing(board, oldCell, newCell, currentPlayer);
+    } else {
+      return this.invalidMove(currentPlayer, board, 'Movement invalide');
     }
   }
 
   public historyMove(
     currentPlayer: string,
-    oldCell: CellType,
-    newCell: CellType,
+    x: number,
+    y: string,
+    s: string,
   ): void {
-    this.socketEvents.shot = `P->${newCell.x}${newCell.y}`;
+    this.socketEvents.shot = `${s}.${x}${y}`;
   }
 
   public initReturnSocket(
@@ -209,13 +341,27 @@ export class ChessGameService {
     oldCell: CellType,
     newCell: CellType,
   ): GameSocketEmitType {
+    const x = newCell.x;
+    const y = newCell.y;
+    const s = oldCell.piece.symbol;
     board[newCell.x][this.y_axis.indexOf(newCell.y)].piece = oldCell.piece;
     board[oldCell.x][this.y_axis.indexOf(oldCell.y)].piece = null;
     this.socketEvents.currentPlayer = currentPlayer === 'w' ? 'b' : 'w';
     this.socketEvents.message = `C'est au tour du joueur ${currentPlayer}`;
     this.socketEvents.board = board;
     // Générer l'historique du coup
-    this.historyMove(currentPlayer, oldCell, newCell);
+    this.historyMove(currentPlayer, x, y, s);
+    return this.socketEvents;
+  }
+
+  public invalidMove(
+    currentPlayer: string,
+    board: CellType[][],
+    message: string,
+  ): GameSocketEmitType {
+    this.socketEvents.message = `${message} ${currentPlayer}`;
+    this.socketEvents.currentPlayer = currentPlayer;
+    this.socketEvents.board = board;
     return this.socketEvents;
   }
 }
