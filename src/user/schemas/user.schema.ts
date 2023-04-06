@@ -27,12 +27,6 @@ export class User {
   password: string;
 
   @Prop()
-  country: string;
-
-  @Prop()
-  biography: string;
-
-  @Prop()
   level: Level;
 
   @Prop()

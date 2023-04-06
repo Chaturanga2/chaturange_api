@@ -34,14 +34,6 @@ export class CreateUserDto {
   @IsString()
   readonly password_confirmation: string;
 
-  @IsEmpty()
-  @IsString()
-  readonly country: string;
-
-  @IsEmpty()
-  @IsString()
-  readonly biography: string;
-
   @IsNotEmpty()
   @IsEnum(Level)
   readonly level: Level;
