@@ -15,6 +15,7 @@ import { AuthMiddleware } from './middleware/auth-middleware.service';
 import { UserController } from './user/controllers/user.controller';
 import { JwtService } from '@nestjs/jwt';
 import { UserModule } from './user/user.module';
+import { ChessGameService } from './chess-game/chess-game.service';
 
 @Module({
   imports: [
@@ -33,7 +34,7 @@ import { UserModule } from './user/user.module';
     UserModule,
   ],
   controllers: [AppController],
-  providers: [AppService, JwtService],
+  providers: [AppService, JwtService, ChessGameService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
