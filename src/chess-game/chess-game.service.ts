@@ -130,8 +130,7 @@ export class ChessGameService {
     oldCell: CellType,
     newCell: CellType,
     currentPlayer: string,
-  ): boolean {
-    return true;
+  ): CellType {
     // Vérifier si la case de départ contient un pion de la bonne couleur
     if (
       !oldCell.piece ||
@@ -139,7 +138,7 @@ export class ChessGameService {
       oldCell.piece.symbol !== 'p'
     ) {
       console.log(`cest au tour du joueur ${currentPlayer}`);
-      return false;
+      return newCell;
     }
     // Calculer la direction de déplacement du pion
     const direction = currentPlayer === 'w' ? 1 : -1;
@@ -153,7 +152,7 @@ export class ChessGameService {
         newCell.piece = oldCell.piece;
         newCell.piece.moved = true;
         oldCell.piece = null;
-        return true;
+        return newCell;
       } else if (
         oldCell.x + direction * 2 === newCell.x &&
         !oldCell.piece.moved &&
@@ -163,7 +162,7 @@ export class ChessGameService {
         newCell.piece = oldCell.piece;
         newCell.piece.moved = true;
         oldCell.piece = null;
-        return true;
+        return newCell;
       }
     } else if (
       Math.abs(
@@ -177,11 +176,11 @@ export class ChessGameService {
         newCell.piece = oldCell.piece;
         newCell.piece.moved = true;
         oldCell.piece = null;
-        return true;
+        return newCell;
       }
     }
 
-    return false;
+    return newCell;
   }
 
   public movePieces(
@@ -190,12 +189,12 @@ export class ChessGameService {
     oldCell: CellType,
     newCell: CellType,
     currentPlayer: string,
-  ): boolean {
+  ): CellType {
     switch (pieceName) {
       case 'pawn':
         return this.movePawn(board, oldCell, newCell, currentPlayer);
       default:
-        return false;
+        return newCell;
     }
   }
 }

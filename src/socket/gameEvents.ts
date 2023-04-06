@@ -59,7 +59,7 @@ export class GameEvents {
 
     // Check if move is valid
     const { pieceName, board, oldCell, newCell, currentPlayer } = body;
-    const newBoard = this.chessGameService.movePieces(
+    const piece = this.chessGameService.movePieces(
       pieceName,
       board,
       oldCell,
@@ -68,6 +68,6 @@ export class GameEvents {
     );
 
     // Send boolean to client
-    this.server.emit('movePiece', newBoard);
+    this.server.emit('movePiece', piece);
   }
 }
