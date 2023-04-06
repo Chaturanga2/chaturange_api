@@ -8,6 +8,54 @@ export class ChessGameService {
 
   public readonly board: CellType[][] = [];
 
+  public moveRook(
+    board: CellType[][],
+    oldCell: CellType,
+    newCell: CellType,
+    currentPlayer: string,
+  ): boolean {
+    const rook = oldCell.piece;
+
+    // Vérifier si la case de départ contient une tour de la bonne couleur
+    if (!rook || rook.color !== currentPlayer || rook.symbol !== 'r') {
+      return false;
+    }
+
+    // Vérifier si le déplacement est valide
+    const xDiff = Math.abs(oldCell.x - newCell.x);
+    const yDiff = Math.abs(
+      this.y_axis.indexOf(oldCell.y) - this.y_axis.indexOf(newCell.y),
+    );
+    if (xDiff !== 0 && yDiff !== 0) {
+      return false;
+    }
+
+    // Vérifier s'il y a des obstacles
+    const startX = Math.min(oldCell.x, newCell.x);
+    const endX = Math.max(oldCell.x, newCell.x);
+    const startY = Math.min(
+      this.y_axis.indexOf(oldCell.y),
+      this.y_axis.indexOf(newCell.y),
+    );
+    const endY = Math.max(
+      this.y_axis.indexOf(oldCell.y),
+      this.y_axis.indexOf(newCell.y),
+    );
+    for (let x = startX + 1; x < endX; x++) {
+      for (let y = startY + 1; y < endY; y++) {
+        if (board[x][y].piece) {
+          return false;
+        }
+      }
+    }
+
+    // Déplacement
+    newCell.piece = rook;
+    oldCell.piece = null;
+
+    return true;
+  }
+
   public moveKnight(
     board: CellType[][],
     oldCell: CellType,
@@ -60,7 +108,7 @@ export class ChessGameService {
     const xDirection = oldCell.x < newCell.x ? 1 : -1;
     const yDirection =
       this.y_axis.indexOf(oldCell.y) < this.y_axis.indexOf(newCell.y) ? 1 : -1;
-    for (let i = 1; i < x; i++) {
+    for (let i = 1; i < xDiff; i++) {
       const currentCell =
         board[oldCell.x + i * xDirection][
           this.y_axis.indexOf(oldCell.y) + i * yDirection
@@ -91,8 +139,31 @@ export class ChessGameService {
     }
 
     // Vérifier si le déplacement est valide
-    if (oldCell.x === newCell.x) {
-      // Déplacement horizontal
+    const xDiff = Math.abs(oldCell.x - newCell.x);
+    const yDiff = Math.abs(
+      this.y_axis.indexOf(oldCell.y) - this.y_axis.indexOf(newCell.y),
+    );
+    const isDiagonal = xDiff === yDiff;
+    const isHorizontal = oldCell.x === newCell.x;
+    const isVertical = oldCell.y === newCell.y;
+
+    if (!isDiagonal && !isHorizontal && !isVertical) {
+      return false;
+    }
+
+    if (isDiagonal) {
+      const xDirection = newCell.x > oldCell.x ? 1 : -1;
+      const yDirection = newCell.y > oldCell.y ? 1 : -1;
+      let x = oldCell.x + xDirection;
+      let y = this.y_axis.indexOf(oldCell.y) + yDirection;
+      while (x !== newCell.x && y !== this.y_axis.indexOf(newCell.y)) {
+        if (board[x][y].piece) {
+          return false;
+        }
+        x += xDirection;
+        y += yDirection;
+      }
+    } else if (isHorizontal) {
       const start = Math.min(
         this.y_axis.indexOf(oldCell.y),
         this.y_axis.indexOf(newCell.y),
@@ -106,34 +177,11 @@ export class ChessGameService {
           return false;
         }
       }
-    } else if (oldCell.y === newCell.y) {
-      // Déplacement vertical
+    } else if (isVertical) {
       const start = Math.min(oldCell.x, newCell.x);
       const end = Math.max(oldCell.x, newCell.x);
       for (let i = start + 1; i < end; i++) {
         if (board[i][this.y_axis.indexOf(oldCell.y)].piece) {
-          return false;
-        }
-      }
-    } else {
-      // Déplacement diagonal
-      const xDiff = Math.abs(oldCell.x - newCell.x);
-      const yDiff =
-        this.y_axis.indexOf(oldCell.y) - this.y_axis.indexOf(newCell.y);
-      if (xDiff !== yDiff) {
-        return false;
-      }
-      const xDirection = oldCell.x < newCell.x ? 1 : -1;
-      const yDirection =
-        this.y_axis.indexOf(oldCell.y) < this.y_axis.indexOf(newCell.y)
-          ? 1
-          : -1;
-      for (let i = 1; i < xDiff; i++) {
-        if (
-          board[oldCell.x + i * xDirection][
-            this.y_axis.indexOf(oldCell.y) + i * yDirection
-          ].piece
-        ) {
           return false;
         }
       }
