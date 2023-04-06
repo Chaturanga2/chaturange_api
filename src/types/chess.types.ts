@@ -1,4 +1,6 @@
 export type Piece = {
+    x_axe: number[];
+    y_axe: string[];
     image?: string;
     symbol: string;
     color: string;
