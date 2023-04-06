@@ -111,6 +111,7 @@ export class ChessGameService {
         );
         if (piece) {
           cell.piece = {
+            moved: false,
             image: piece.image,
             symbol: piece.s,
             color: piece.color,
@@ -120,6 +121,81 @@ export class ChessGameService {
       }
       this.board.push(row);
     }
+    console.log(this.board);
     return this.board;
+  }
+
+  public movePawn(
+    board: CellType[][],
+    oldCell: CellType,
+    newCell: CellType,
+    currentPlayer: string,
+  ): boolean {
+    return true;
+    // Vérifier si la case de départ contient un pion de la bonne couleur
+    if (
+      !oldCell.piece ||
+      oldCell.piece.color !== currentPlayer ||
+      oldCell.piece.symbol !== 'p'
+    ) {
+      console.log(`cest au tour du joueur ${currentPlayer}`);
+      return false;
+    }
+    // Calculer la direction de déplacement du pion
+    const direction = currentPlayer === 'w' ? 1 : -1;
+
+    // Vérifier si le déplacement est valide
+    if (oldCell.y === newCell.y) {
+      // Déplacement en avant
+      if (oldCell.x + direction === newCell.x && !newCell.piece) {
+        // Déplacement simple
+
+        newCell.piece = oldCell.piece;
+        newCell.piece.moved = true;
+        oldCell.piece = null;
+        return true;
+      } else if (
+        oldCell.x + direction * 2 === newCell.x &&
+        !oldCell.piece.moved &&
+        !newCell.piece
+      ) {
+        // Déplacement double au premier coup
+        newCell.piece = oldCell.piece;
+        newCell.piece.moved = true;
+        oldCell.piece = null;
+        return true;
+      }
+    } else if (
+      Math.abs(
+        this.y_axis.indexOf(oldCell.y) - this.y_axis.indexOf(newCell.y),
+      ) === 1 &&
+      oldCell.x + direction === newCell.x
+    ) {
+      // Prise en diagonale
+      const toCell = newCell;
+      if (toCell.piece && toCell.piece.color !== currentPlayer) {
+        newCell.piece = oldCell.piece;
+        newCell.piece.moved = true;
+        oldCell.piece = null;
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  public movePieces(
+    pieceName: string,
+    board: CellType[][],
+    oldCell: CellType,
+    newCell: CellType,
+    currentPlayer: string,
+  ): boolean {
+    switch (pieceName) {
+      case 'pawn':
+        return this.movePawn(board, oldCell, newCell, currentPlayer);
+      default:
+        return false;
+    }
   }
 }

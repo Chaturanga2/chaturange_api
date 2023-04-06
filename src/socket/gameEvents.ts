@@ -8,6 +8,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ChessGameService } from '../chess-game/chess-game.service';
+import { CellType } from '../types/chess.types';
 
 @WebSocketGateway({
   cors: {
@@ -51,14 +52,22 @@ export class GameEvents {
     this.server.emit('move', positionData);
   }
 
-  @SubscribeMessage('getBoard')
-  getBoard(
-    @MessageBody() positionData: any,
-    @ConnectedSocket() client: Socket,
-  ) {
-    console.log('gma:', this.chessGameService.generatePieces());
+  // Get movePiece event from client and send to client boolean if move is valid
+  @SubscribeMessage('movePiece')
+  handleMovePiece(@MessageBody() body: any, @ConnectedSocket() client: Socket) {
+    // console.log('Move piece data received:', pieceName);
 
-    // Diffuser l'événement "move" à tous les clients connectés
-    this.server.emit('getBoard', this.chessGameService.generatePieces());
+    // Check if move is valid
+    const { pieceName, board, oldCell, newCell, currentPlayer } = body;
+    const newBoard = this.chessGameService.movePieces(
+      pieceName,
+      board,
+      oldCell,
+      newCell,
+      currentPlayer,
+    );
+
+    // Send boolean to client
+    this.server.emit('movePiece', newBoard);
   }
 }
