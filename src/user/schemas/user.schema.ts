@@ -30,9 +30,6 @@ export class User {
   country: string;
 
   @Prop()
-  biography: string;
-
-  @Prop()
   level: Level;
 
   @Prop()
