@@ -33,3 +33,4 @@ export class ChessGameState {
     this.currentPlayer = 1 - this.currentPlayer;
   }
 }
+
